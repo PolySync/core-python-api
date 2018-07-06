@@ -1,24 +1,31 @@
-## examples
-If package isn't installed, run the examples from the top level directory.
+# Examples
 
-### publish
-This example works outside the PolySync node template, allowing for
-publish functionality in an application agnostic way.
+* Pure Python example usage of the PolySync Core Python API.
+* Run examples from the project's top level directory.
 
-### subscribe
-This example works outside the PolySync node template, allowing for
-subscribe functionality in an application agnostic way.
+## publish
 
-### node_template
-This example works within the PolySync node template. All the work happens
-in the states defined my the callback object.
+* Publishes "Hello World" `ps_event_msg` messages on the PolySync bus.
 
-### logfile_iterator
-- velodyne_hdl32_e_logile_iterator: Writes 3 records from velodyne-hdl32 plog file
-to vendor specific JSON data. Requires path to velodyne-hdl32 plog file as an
-argument.
-- video_device_logfile_iterator: writes 3 records from video-device or
-pointgrey-gige plog file to individual `.ppm` image files.
-Requires data logged as RGB24 or YUYV and path to video-device or pointgrey-gige
-plog file as an argument. **NOTE: This example is not python3 compatible yet.
-Run it with python 2.7.
+## subscribe
+
+* Subscribes to `ps_diagnostic_trace_msg`, `ps_event_msg`, `ps_lidar_points_msg`,
+  `ps_image_data_msg`, and `ps_platform_motion_msg`. Prints the contet of any messages it reads.
+
+## node_template
+
+* Publishes "Hello World" `ps_event_msg` messages.
+* Subscribes to `ps_diagnostic_trace_msg` and publishes the content of any messages read.
+
+## logfile_iterator
+
+### velodyne_hdl32_e_logile_iterator
+
+Writes 3 records from velodyne-hdl32 plog file to vendor specific JSON data. Requires path to
+velodyne-hdl32 plog file as an argument.
+
+### video_device_logfile_iterator
+
+Writes 3 records from video-device or pointgrey-gige plog file to individual `.ppm` image files.
+Requires data logged as `RGB24` or `YUYV` and path to video-device or pointgrey-gige plog file as an
+argument. __**NOTE__: This example is NOT `python3` compatible yet. Run it with python 2.7.
