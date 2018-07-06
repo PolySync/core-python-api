@@ -1,0 +1,336 @@
+# IDL definitions visible in /usr/local/polysync/pdm/psync.idl
+# WARNING: Auto-generated file. Any changes are subject to being overwritten
+# by setup.py build script.
+
+cimport polysync
+cimport polysync.data_model._internal
+import polysync.data_model.types as py_ps_types
+import random
+import sys
+from hamcrest import assert_that, equal_to
+
+RAND_BOUND = 0xF
+random.seed(a=RAND_BOUND)
+
+def get_pseudo_random():
+    integer = random.randint(0, RAND_BOUND)
+    real = random.random()
+
+    return integer * real
+
+{{#structs}}
+
+cdef object compare_types_{{name}}(py_type, polysync.{{name}} * c_type):
+    """Assert values are equivalent after translation
+    in --- C struct {{name}}
+    in -- Python class Py_{{name}}
+    """
+{{#members}}
+{{#type.is_primitive}}
+    assert_that(\
+    <polysync.DDS_{{type.name}}>py_type.{{name}}, \
+    equal_to(c_type.{{name}}), \
+    arg3='py_type.{{name}} != c_type.{{name}}')
+{{/type.is_primitive}}
+{{#type.is_enum}}
+    assert_that(\
+    <polysync.{{type.name}}>py_type.{{name}}, \
+    equal_to(c_type.{{name}}), \
+    arg3='py_type.{{name}} != c_type.{{name}}')
+{{/type.is_enum}}
+{{^type.is_enum}}
+{{^type.is_primitive}}
+{{#type.is_array}}
+    for i in range(0,{{type.size}}):
+{{#type.type.is_primitive}}
+        assert_that(\
+        <polysync.DDS_{{type.type.name}}>py_type.{{name}}[i], \
+        equal_to(c_type.{{name}}[i]), \
+        arg3='py_type.{{name}}[%s] != c_type.{{name}}[%s]' % (i, i))
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+        assert_that(\
+        compare_types_{{type.type.name}}(\
+        py_type.{{name}}[i], \
+        &c_type.{{name}}[i]), \
+        equal_to(None), \
+        arg3='py_type.{{name}}[%s] != c_type.{{name}}[%s]' % (i, i))
+{{/type.type.is_primitive}}
+{{/type.is_array}}
+{{#type.is_sequence}}
+{{#type.type.special_case}}
+    assert_that(\
+    py_type.{{name}}, \
+    equal_to((<unsigned char*>c_type.{{name}}._buffer)[0:c_type.{{name}}._length]), \
+    arg3='py_type.{{name}} != c_type.{{name}}._buffer')
+{{/type.type.special_case}}
+{{^type.type.special_case}}
+    for e in range(0, c_type.{{name}}._length):
+{{#type.type.is_primitive}}
+        assert_that(\
+        <polysync.DDS_{{type.type.name}}>py_type.{{name}}[e], \
+        equal_to(c_type.{{name}}._buffer[e]), \
+        arg3='py_type.{{name}}[%s] != c_type.{{name}}._buffer[%s]' % (e,e))
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+        assert_that(\
+        compare_types_{{type.type.name}}(\
+        py_type.{{name}}[e], \
+        &c_type.{{name}}._buffer[e]), \
+        equal_to(None), \
+        arg3='py_type.{{name}}[%s] != c_type.{{name}}._buffer[%s]' % (e,e))
+{{/type.type.is_primitive}}
+{{/type.type.special_case}}
+{{/type.is_sequence}}
+{{^type.is_array}}
+{{^type.is_sequence}}
+    assert_that(\
+    compare_types_{{type.name}}(\
+    py_type.{{name}}, \
+    &c_type.{{name}}), \
+    equal_to(None), \
+    arg3='py_type.{{name}} != c_type.{{name}}')
+{{/type.is_sequence}}
+{{/type.is_array}}
+{{/type.is_primitive}}
+{{/type.is_enum}}
+{{/members}}
+    return None
+{{/structs}}
+{{#structs}}
+
+def {{name}}_type_convert_testable(py_type):
+    """Testing utility.
+    Allows access to to/from Python/C conversion functions from Python tests.
+    in -- Py_{{name}}
+    """
+    cdef polysync.{{name}} c_type
+    polysync.data_model._internal.{{name}}_py_to_c(py_type, &c_type)
+    assert_that(compare_types_{{name}}(py_type, &c_type), equal_to(None))
+    new_py_type = polysync.data_model._internal.{{name}}_c_to_py(&c_type)
+    assert_that(compare_types_{{name}}(new_py_type, &c_type), equal_to(None))
+{{/structs}}
+{{#structs}}
+
+def Py_{{name}}_initialize_random():
+    """Initialize a pseudo random Python class.
+    Use constant seed for reproducibility"""
+
+    py_type =  py_ps_types.Py_{{name}}()
+{{#members}}
+{{#type.is_primitive}}
+    py_type.{{name}} = get_pseudo_random()
+{{/type.is_primitive}}
+{{#type.is_enum}}
+    count = 0
+{{#type.values}}
+    count += 1
+{{/type.values}}
+    py_type.{{name}} = get_pseudo_random() % count
+{{/type.is_enum}}
+{{^type.is_enum}}
+{{^type.is_primitive}}
+{{#type.is_array}}
+    for i in range(0,{{type.size}}):
+{{#type.type.is_primitive}}
+        py_type.{{name}}[i] = get_pseudo_random()
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+        py_type.{{name}}[i] = Py_{{type.type.name}}_initialize_random()
+{{/type.type.is_primitive}}
+{{/type.is_array}}
+{{#type.is_sequence}}
+{{#type.type.special_case}}
+    py_type.{{name}} = str(get_pseudo_random() * RAND_BOUND)
+{{/type.type.special_case}}
+{{^type.type.special_case}}
+    bound = random.randint(0, RAND_BOUND) % 10
+    for e in range(0, bound):
+{{#type.type.is_primitive}}
+        py_type.{{name}}.append(get_pseudo_random())
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+        py_type.{{name}}.append(Py_{{type.type.name}}_initialize_random())
+{{/type.type.is_primitive}}
+{{/type.type.special_case}}
+{{/type.is_sequence}}
+{{^type.is_array}}
+{{^type.is_sequence}}
+    py_type.{{name}} = Py_{{type.name}}_initialize_random()
+{{/type.is_sequence}}
+{{/type.is_array}}
+{{/type.is_primitive}}
+{{/type.is_enum}}
+{{/members}}
+    return py_type
+{{/structs}}
+{{#unions}}
+
+cdef object compare_types_{{name}}(py_type, polysync.{{name}} * c_type):
+    """Assert values are equivalent after translation
+    in --- C struct {{name}}
+    in -- Python class Py_{{name}}
+    """
+    assert_that(\
+    c_type._d, \
+    equal_to(<polysync.{{descriminator_kind}}>py_type.kind), \
+    arg3='py_type.kind != c_type._d')
+{{#members}}
+{{#descriminator_value_associations}}
+    if py_type.kind == polysync.{{.}}:
+{{#type.is_primitive}}
+        assert_that(\
+        c_type._u.{{name}}, \
+        equal_to(<polysync.DDS_{{type.name}}>py_type.value), \
+        arg3='py_type.value != c_type._u.{{name}}')
+{{/type.is_primitive}}
+{{#type.is_enum}}
+        assert_that(\
+        c_type._u.{{name}}, \
+        equal_to(<polysync.{{type.name}}>py_type.value), \
+        arg3='py_type.value != c_type._u.{{name}}')
+{{/type.is_enum}}
+{{^type.is_enum}}
+{{^type.is_primitive}}
+{{#type.is_array}}
+        for i in range(0, {{type.size}}):
+{{#type.type.is_primitive}}
+            assert_that(\
+            c_type._u.{{name}}[i], \
+            equal_to(<polysync.DDS_{{type.type.name}}>py_type.value[i]), \
+            arg3='py_type.value[%s] != c_type._u.{{name}}[%s]' % (i,i))
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+            assert_that(\
+            compare_types_{{type.type.name}}(\
+            py_type.value[i],&c_type._u.{{name}}[i]), \
+            equal_to(None), \
+            arg3='py_type.value[%s] != c_type._u.{{name}}[%s]' % (i,i))
+{{/type.type.is_primitive}}
+{{/type.is_array}}
+{{#type.is_sequence}}
+{{#type.type.special_case}}
+        assert_that(\
+        py_type.value, \
+        equal_to((<unsigned char*>c_type._u.{{name}}._buffer)[0:c_type._u.{{name}}._length]), \
+        arg3='py_type.{{name}} != c_type._u.{{name}}._buffer')
+{{/type.type.special_case}}
+{{^type.type.special_case}}
+        buffer_len = len(py_type.value)
+        assert_that(\
+        c_type._u.{{name}}._maximum, \
+        equal_to(buffer_len), \
+        arg3='c_type._u.{{name}}._maximum != buffer_len')
+        assert_that(\
+        c_type._u.{{name}}._length, \
+        equal_to(buffer_len), \
+        arg3='c_type._u.{{name}}._length != buffer_len')
+        assert_that(\
+        c_type._u.{{name}}._release, \
+        equal_to(1), \
+        arg3='c_type._u.{{name}}._release != 1')
+
+        for e in range(0, buffer_len):
+{{#type.type.is_primitive}}
+            assert_that(\
+            c_type._u.{{name}}._buffer[e], \
+            equal_to(<polysync.DDS_{{type.type.name}}>py_type.value[e]), \
+            arg3='py_type.value[%s] != c_type._u.{{name}}._buffer[%s]' % (e,e))
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+            assert_that(\
+            compare_types_{{type.type.name}}(\
+            py_type.value[e], \
+            &c_type._u.{{name}}._buffer[e]), \
+            equal_to(None), \
+            arg3='py_type.value[%s] != c_type._u.{{name}}._buffer[%s]' % (e,e))
+{{/type.type.is_primitive}}
+{{/type.type.special_case}}
+{{/type.is_sequence}}
+{{^type.is_array}}
+{{^type.is_sequence}}
+    assert_that(\
+    compare_types_{{type.name}}(\
+    py_type.value, \
+    &c_type._u.{{name}}), \
+    equal_to(None), \
+    arg3='py_type.value != c_type._u.{{name}}')
+{{/type.is_sequence}}
+{{/type.is_array}}
+{{/type.is_primitive}}
+{{/type.is_enum}}
+{{/descriminator_value_associations}}
+{{/members}}
+{{/unions}}
+{{#unions}}
+
+def {{name}}_type_convert_testable(py_type):
+    """Testing utility.
+    Allows access to to/from Python/C conversion functions from Python tests.
+    in -- Py_{{name}}
+    """
+    cdef polysync.{{name}} c_type
+    polysync.data_model._internal.{{name}}_py_to_c(py_type, &c_type)
+    assert_that(compare_types_{{name}}(py_type, &c_type), equal_to(None))
+    new_py_type = polysync.data_model._internal.{{name}}_c_to_py(&c_type)
+    assert_that(compare_types_{{name}}(new_py_type, &c_type), equal_to(None))
+{{/unions}}
+{{#unions}}
+
+def Py_{{name}}_initialize_random():
+    """Initialize a pseudo random Python class.
+    Use constant seed for reproducibility"""
+    py_type = py_ps_types.Py_{{name}}()
+    py_type.kind = py_type.kinds[random.choice(py_type.kinds.keys())]
+{{#members}}
+{{#descriminator_value_associations}}
+    if py_type.kind == polysync.{{.}}:
+{{#type.is_primitive}}
+        py_type.value = get_pseudo_random()
+{{/type.is_primitive}}
+{{#type.is_enum}}
+        count = 0
+{{#type.values}}
+        count += 1
+{{/type.values}}
+        py_type.value = get_pseudo_random() % count
+{{/type.is_enum}}
+{{^type.is_enum}}
+{{^type.is_primitive}}
+{{#type.is_array}}
+        py_type.value = [0] * {{type.size}}
+        for i in range(0,{{type.size}}):
+{{#type.type.is_primitive}}
+            py_type.value[i] = get_pseudo_random()
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+            py_type.value[i] = Py_{{type.type.name}}_initialize_random()
+{{/type.type.is_primitive}}
+{{/type.is_array}}
+{{#type.is_sequence}}
+{{#type.type.special_case}}
+        py_type.value = str(get_pseudo_random() * RAND_BOUND)
+{{/type.type.special_case}}
+{{^type.type.special_case}}
+        py_type.value = []
+        bound = random.randint(0, RAND_BOUND) % 10
+        for e in range(0, bound):
+{{#type.type.is_primitive}}
+                py_type.value.append(get_pseudo_random())
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+                py_type.value.append(Py_{{type.type.name}}_initialize_random())
+{{/type.type.is_primitive}}
+{{/type.type.special_case}}
+{{/type.is_sequence}}
+{{^type.is_array}}
+{{^type.is_sequence}}
+                py_type.value = Py_{{type.name}}_initialize_random()
+{{/type.is_sequence}}
+{{/type.is_array}}
+{{/type.is_primitive}}
+{{/type.is_enum}}
+{{/descriminator_value_associations}}
+{{/members}}
+    return py_type
+{{/unions}}

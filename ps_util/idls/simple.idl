@@ -1,0 +1,95 @@
+
+
+const octet SIMPLE_MODULE_VERSION_MAJOR = 1;
+
+const octet SIMPLE_MODULE_VERSION_MINOR = 0;
+
+const unsigned short SIMPLE_MODULE_VERSION_SUBMINOR = 0;
+
+typedef unsigned long ps_msg_type;
+typedef unsigned long long ps_timestamp;
+typedef unsigned long long ps_guid;
+
+struct ps_msg_header
+{
+    ps_msg_type                 type;
+    ps_timestamp                timestamp;
+    ps_guid                     src_guid;
+};
+
+enum ps_node_state_kind
+{
+    NODE_STATE_INVALID,
+    NODE_STATE_AUTH,
+    NODE_STATE_INIT,
+    NODE_STATE_OK,
+    NODE_STATE_WARN,
+    NODE_STATE_ERROR,
+    NODE_STATE_FATAL,
+    NODE_STATE_KIND_COUNTs
+};
+
+typedef ps_msg_header whyyy_type;
+struct ps_byte_array_msg
+{
+    ps_msg_header                   header;
+    whyyy_type                      some_type;
+    whyyy_type                      gahh_array[SIMPLE_MODULE_VERSION_MAJOR];
+    ps_node_state_kind              dest_guid;
+    unsigned long                   data_type[10];
+    sequence<octet>                 bytes;
+    sequence<whyyy_type>            gahh_seq;
+};
+///@cond INTERNAL
+#pragma keylist ps_byte_array_msg  header.src_guid, dest_guid
+#pragma expose  ps_byte_array_msg
+///@endcond
+
+enum ps_parameter_value_kind
+{
+    PARAMETER_VALUE_UNKNOWN,
+    PARAMETER_VALUE_KIND_COUNT,
+    PARAMETER_VALUE_ULONGLONG,
+    PARAMETER_VALUE_LONGLONG,
+    PARAMETER_VALUE_DOUBLE,
+    PARAMETER_VALUE_STRING
+};
+
+union ps_parameter_value switch( ps_parameter_value_kind )
+{
+    case PARAMETER_VALUE_UNKNOWN:
+    case PARAMETER_VALUE_KIND_COUNT:
+    case PARAMETER_VALUE_ULONGLONG:
+        unsigned long long      ull_value;
+    case PARAMETER_VALUE_LONGLONG:
+        long long               ll_value;
+    case PARAMETER_VALUE_DOUBLE:
+        double                  d_value;
+    case PARAMETER_VALUE_STRING:
+        sequence<char>          str_value;
+};
+
+typedef unsigned long ps_parameter_id;
+
+struct ps_parameter_group_list
+{
+    unsigned long id;
+    unsigned long parameter_list_id;
+    unsigned long parent_id;
+    sequence<char> name;
+    ps_parameter_id toggle_parameter_id;
+    sequence<ps_parameter_id> item_ids;
+};
+
+struct ps_parameter
+{
+    ps_parameter_id             id;
+    ps_timestamp                timestamp;
+    ps_parameter_value          value;
+    ps_parameter_value          min;
+    ps_parameter_value          max;
+    ps_parameter_value          step;
+    octet                       flags;
+    sequence<char>              description;
+    sequence<ps_byte_array_msg>  msg_seq;
+};

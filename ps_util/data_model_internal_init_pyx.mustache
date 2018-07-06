@@ -1,0 +1,265 @@
+# IDL definitions visible in /usr/local/polysync/pdm/psync.idl
+# WARNING: Auto-generated file. Any changes are subject to being overwritten
+# by setup.py build script.
+
+cimport polysync
+import polysync.data_model.types
+from libc.string cimport strncpy
+
+#
+# utility function definitions
+#
+
+cdef polysync.conversion_fuc_ptr get_conversion_function(char * msg_name)  except * with gil:
+{{#structs}}
+    if msg_name == b"{{name}}":
+        return {{name}}_c_to_py
+{{/structs}}
+{{#unions}}
+    if msg_name == b"{{name}}":
+        return {{name}}_c_to_py
+{{/unions}}
+    return NULL
+
+
+{{#structs}}
+
+cdef object {{name}}_c_to_py(void * c_ptr):
+    """Translation function, C struct to Python class"""
+    cdef polysync.{{name}} * c_type = <polysync.{{name}} *>c_ptr
+    py_type = polysync.data_model.types.Py_{{name}}()
+{{#members}}
+{{#type.is_primitive}}
+    py_type.{{name}} = c_type.{{name}}
+{{/type.is_primitive}}
+{{#type.is_enum}}
+    py_type.{{name}} = c_type.{{name}}
+{{/type.is_enum}}
+{{^type.is_enum}}
+{{^type.is_primitive}}
+{{#type.is_array}}
+    for i in range(0,{{type.size}}):
+{{#type.type.is_primitive}}
+        py_type.{{name}}[i] = c_type.{{name}}[i]
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+        py_type.{{name}}[i] = {{type.type.name}}_c_to_py(&c_type.{{name}}[i])
+{{/type.type.is_primitive}}
+{{/type.is_array}}
+{{#type.is_sequence}}
+{{#type.type.special_case}}
+    py_type.{{name}} = (<unsigned char*>c_type.{{name}}._buffer)[0:c_type.{{name}}._length]
+{{/type.type.special_case}}
+{{^type.type.special_case}}
+    for e in range(0, c_type.{{name}}._length):
+{{#type.type.is_primitive}}
+        py_type.{{name}}.append(c_type.{{name}}._buffer[e])
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+        py_type.{{name}}.append({{type.type.name}}_c_to_py(&c_type.{{name}}._buffer[e]))
+{{/type.type.is_primitive}}
+{{/type.type.special_case}}
+{{/type.is_sequence}}
+{{^type.is_array}}
+{{^type.is_sequence}}
+    py_type.{{name}} = {{type.name}}_c_to_py(&c_type.{{name}})
+{{/type.is_sequence}}
+{{/type.is_array}}
+{{/type.is_primitive}}
+{{/type.is_enum}}
+{{/members}}
+    return py_type
+{{/structs}}
+{{#structs}}
+
+cdef void {{name}}_py_to_c(
+    py_type, void * c_ptr) except * with gil:
+    """Translation Function
+    in --- Python class polysync.data_model.types.Py_{{name}}
+    out --- C struct {{name}}
+    """
+    cdef polysync.{{name}} * c_type = <polysync.{{name}} *> c_ptr;
+{{#members}}
+{{#type.is_primitive}}
+    c_type.{{name}} = <polysync.DDS_{{type.name}}>py_type.{{name}}
+{{/type.is_primitive}}
+{{#type.is_enum}}
+    c_type.{{name}} = <polysync.{{type.name}}>py_type.{{name}}
+{{/type.is_enum}}
+{{^type.is_enum}}
+{{^type.is_primitive}}
+{{#type.is_array}}
+    for i in range(0, {{type.size}}):
+{{#type.type.is_primitive}}
+         c_type.{{name}}[i] = <polysync.DDS_{{type.type.name}}>py_type.{{name}}[i]
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+        {{type.type.name}}_py_to_c(py_type.{{name}}[i], &c_type.{{name}}[i])
+{{/type.type.is_primitive}}
+{{/type.is_array}}
+{{#type.is_sequence}}
+    buffer_len = len(py_type.{{name}})
+    c_type.{{name}}._maximum = buffer_len
+    c_type.{{name}}._length = buffer_len
+    c_type.{{name}}._release = 1
+    c_type.{{name}}._buffer = \
+{{#type.type.is_primitive}}
+        <polysync.DDS_{{type.type.name}}*> polysync.DDS_sequence_allocbuf (NULL, sizeof (polysync.DDS_{{type.type.name}}), buffer_len)
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+        <polysync.{{type.type.name}}*> polysync.DDS_sequence_allocbuf (NULL, sizeof (polysync.{{type.type.name}}), buffer_len)
+{{/type.type.is_primitive}}
+{{#type.type.special_case}}
+    strncpy(<char*>c_type.{{name}}._buffer, py_type.{{name}}, buffer_len)
+{{/type.type.special_case}}
+{{^type.type.special_case}}
+    for e in range(0, buffer_len):
+{{#type.type.is_primitive}}
+        c_type.{{name}}._buffer[e] = <polysync.DDS_{{type.type.name}}>py_type.{{name}}[e]
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+        {{type.type.name}}_py_to_c(
+            py_type.{{name}}[e], &c_type.{{name}}._buffer[e])
+{{/type.type.is_primitive}}
+{{/type.type.special_case}}
+{{/type.is_sequence}}
+{{^type.is_array}}
+{{^type.is_sequence}}
+    {{type.name}}_py_to_c(py_type.{{name}}, &c_type.{{name}})
+{{/type.is_sequence}}
+{{/type.is_array}}
+{{/type.is_primitive}}
+{{/type.is_enum}}
+{{/members}}
+{{/structs}}
+{{#unions}}
+
+cdef object {{name}}_c_to_py(void * c_ptr):
+    """Translation function, C struct to Python class"""
+    cdef polysync.{{name}} * c_type = <polysync.{{name}} *>c_ptr
+    py_type = polysync.data_model.types.Py_{{name}}()
+    py_type.kind = c_type._d
+{{#members}}
+{{#descriminator_value_associations}}
+    if py_type.kind == polysync.{{.}}:
+{{#type.is_primitive}}
+        py_type.value = c_type._u.{{name}}
+{{/type.is_primitive}}
+{{#type.is_enum}}
+        py_type.value = c_type._u.{{name}}
+{{/type.is_enum}}
+{{^type.is_enum}}
+{{^type.is_primitive}}
+{{#type.is_array}}
+        py_type.value = [0] * {{type.size}}
+        for i in range(0,{{type.size}}):
+{{#type.type.is_primitive}}
+            py_type.value[i] = c_type._u.{{name}}[i]
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+            py_type.value[i] = {{type.type.name}}_c_to_py(&c_type._u.{{name}}[i])
+{{/type.type.is_primitive}}
+{{/type.is_array}}
+{{#type.is_sequence}}
+{{#type.type.special_case}}
+        py_type.value = (<unsigned char*>c_type._u.{{name}}._buffer)[0:c_type._u.{{name}}._length]
+{{/type.type.special_case}}
+{{^type.type.special_case}}
+        py_type.value = []
+        for e in range(0, c_type._u.{{name}}._length):
+{{#type.type.is_primitive}}
+                py_type.value.append(c_type._u.{{name}}._buffer[e])
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+                py_type.value.append({{type.type.name}}_c_to_py(&c_type._u.{{name}}._buffer[e]))
+{{/type.type.is_primitive}}
+{{/type.type.special_case}}
+{{/type.is_sequence}}
+{{^type.is_array}}
+{{^type.is_sequence}}
+                py_type.value = {{type.name}}_c_to_py(&c_type._u.{{name}})
+{{/type.is_sequence}}
+{{/type.is_array}}
+{{/type.is_primitive}}
+{{/type.is_enum}}
+{{/descriminator_value_associations}}
+{{/members}}
+    return py_type
+{{/unions}}
+{{#unions}}
+
+cdef void {{name}}_py_to_c(
+    py_type, void * c_ptr) except * with gil:
+    """Translation Function
+    in --- Python class Py_{{name}}
+    out --- C struct {{name}}
+    """
+    cdef polysync.{{name}} * c_type = <polysync.{{name}} *> c_ptr;
+    c_type._d = <polysync.{{descriminator_kind}}>py_type.kind
+{{#members}}
+{{#descriminator_value_associations}}
+    if py_type.kind == polysync.{{.}}:
+{{#type.is_primitive}}
+        c_type._u.{{name}} = <polysync.DDS_{{type.name}}>py_type.value
+{{/type.is_primitive}}
+{{#type.is_enum}}
+        c_type._u.{{name}} = <polysync.{{type.name}}>py_type.value
+{{/type.is_enum}}
+{{^type.is_enum}}
+{{^type.is_primitive}}
+{{#type.is_array}}
+        for i in range(0, {{type.size}}):
+{{#type.type.is_primitive}}
+            c_type._u.{{name}}[i] = <polysync.DDS_{{type.type.name}}>py_type.value[i]
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+            {{type.type.name}}_py_to_c(py_type.value[i], &c_type._u.{{name}}[i])
+{{/type.type.is_primitive}}
+{{/type.is_array}}
+{{#type.is_sequence}}
+        buffer_len = len(py_type.value)
+        c_type._u.{{name}}._maximum = buffer_len
+        c_type._u.{{name}}._length = buffer_len
+        c_type._u.{{name}}._release = 1
+        c_type._u.{{name}}._buffer = \
+{{#type.type.is_primitive}}
+        <polysync.DDS_{{type.type.name}}*>polysync.DDS_sequence_allocbuf (NULL, sizeof (polysync.DDS_{{type.type.name}}), buffer_len)
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+        <polysync.{{type.type.name}}*>polysync.DDS_sequence_allocbuf (NULL, sizeof (polysync.{{type.type.name}}), buffer_len)
+{{/type.type.is_primitive}}
+{{#type.type.special_case}}
+        strncpy(<char*>c_type._u.{{name}}._buffer, py_type.value, buffer_len)
+{{/type.type.special_case}}
+{{^type.type.special_case}}
+        for e in range(0, buffer_len):
+{{#type.type.is_primitive}}
+            c_type._u.{{name}}._buffer[e] = <polysync.DDS_{{type.type.name}}>py_type.value[e]
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+            {{type.type.name}}_py_to_c(
+                py_type.value[e], &c_type._u.{{name}}._buffer[e])
+{{/type.type.is_primitive}}
+{{/type.type.special_case}}
+{{/type.is_sequence}}
+{{^type.is_array}}
+{{^type.is_sequence}}
+        {{type.name}}_py_to_c(py_type.value, &c_type._u.{{name}})
+{{/type.is_sequence}}
+{{/type.is_array}}
+{{/type.is_primitive}}
+{{/type.is_enum}}
+{{/descriminator_value_associations}}
+{{/members}}
+{{/unions}}
+
+{{#enums}}
+
+cdef class Py_{{name}}:
+{{#values}}
+
+    @classmethod
+    def {{name}}(self):
+        return polysync.{{name}}
+{{/values}}
+{{/enums}}

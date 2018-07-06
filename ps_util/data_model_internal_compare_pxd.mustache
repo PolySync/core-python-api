@@ -1,0 +1,12 @@
+# IDL definitions visible in /usr/local/polysync/pdm/psync.idl
+# WARNING: Auto-generated file. Any changes are subject to being overwritten
+# by setup.py build script.
+
+cimport polysync
+
+{{#structs}}
+cdef object compare_types_{{name}}(py_type, polysync.{{name}} * c_type)
+{{/structs}}
+{{#unions}}
+cdef object compare_types_{{name}}(py_type, polysync.{{name}} * c_type)
+{{/unions}}

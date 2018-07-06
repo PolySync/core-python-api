@@ -1,0 +1,83 @@
+# Data Model Types module
+# WARNING: Auto-generated file. Any changes are subject to being overwritten
+# by setup.py build script.
+
+{{#structs}}
+
+class Py_{{name}}(object):
+    """Translation of IDL defined {{name}} type"""
+    def __init__(self):
+        self.c_type_name = "{{name}}"
+{{#members}}
+{{#type.is_primitive}}
+        self.{{name}} = 0
+{{/type.is_primitive}}
+{{#type.is_enum}}
+        self.{{name}} = 0
+{{/type.is_enum}}
+{{^type.is_enum}}
+{{^type.is_primitive}}
+{{#type.is_array}}
+{{#type.type.is_primitive}}
+        self.{{name}} = [0] * {{{type.size}}}
+{{/type.type.is_primitive}}
+{{^type.type.is_primitive}}
+        self.{{name}} = [Py_{{type.type.name}}()] * {{{type.size}}}
+{{/type.type.is_primitive}}
+{{/type.is_array}}
+{{#type.is_sequence}}
+{{#type.type.special_case}}
+        self.{{name}} = b""
+{{/type.type.special_case}}
+{{^type.type.special_case}}
+        self.{{name}} = []
+{{/type.type.special_case}}
+{{/type.is_sequence}}
+{{^type.is_array}}
+{{^type.is_sequence}}
+        self.{{name}} = Py_{{type.name}}()
+{{/type.is_sequence}}
+{{/type.is_array}}
+{{/type.is_primitive}}
+{{/type.is_enum}}
+{{/members}}
+{{/structs}}
+{{#unions}}
+
+class Py_{{name}}(object):
+    """Translation of IDL defined {{name}} type"""
+    def __init__(self):
+        import polysync.data_model._internal as enums
+        self.c_type_name = "{{name}}"
+        self.kinds = {
+{{#members}}
+{{#descriminator_value_associations}}
+        '{{.}}' : enums.Py_{{descriminator_kind}}.{{.}}(),
+{{/descriminator_value_associations}}
+{{/members}}
+        }
+        self.kind = 0
+        self.value = 0
+{{/unions}}
+
+{{#enums}}
+
+class Py_{{name}}(object):
+
+    @property
+    def SBP_DIFFERENTIAL_TYPE_INVALID(self):
+        return enums.SBP_DIFFERENTIAL_TYPE_INVALID()
+
+    @property
+    def SBP_DIFFERENTIAL_TYPE_CODE_DIFFERENCE(self):
+        return enums.SBP_DIFFERENTIAL_TYPE_CODE_DIFFERENCE()
+
+    @property
+    def SBP_DIFFERENTIAL_TYPE_RTK(self):
+        return enums.SBP_DIFFERENTIAL_TYPE_RTK()
+
+    @property
+    def SBP_DIFFERENTIAL_TYPE_KIND_COUNT(self):
+        return enums.SBP_DIFFERENTIAL_TYPE_KIND_COUNT()
+
+{{/enums}}

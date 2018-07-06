@@ -1,0 +1,96 @@
+# WARNING: Auto-generated file. Any changes are subject to being overwritten
+# by setup.py build script.
+
+{{#message}}
+#!/usr/bin/python
+import time
+from behave import given
+from behave import when
+from behave import then
+from hamcrest import assert_that, equal_to
+
+try:
+    import polysync.node as ps_node
+    from polysync.data_model.types import Py_{{.}}
+    from polysync.data_model._internal.compare import {{.}}_type_convert_testable, Py_{{.}}_initialize_random
+    from polysync.data_model.message_support.{{.}} import publish, subscribe
+except ImportError:
+    raise ImportError(
+        'Py_{{.}} module dependencies \
+        missing for tests, is the project built?')
+
+
+@given('I have a Py_{{.}} object')
+def step_impl(context):
+    pass
+
+@when('I convert it to its C API equivalent a {{.}}')
+def step_impl(context):
+    pass
+
+@when('I convert the {{.}} back to a Py_{{.}}')
+def step_impl(context):
+    pass
+
+@then('the {{.}} values are equivalent to each Py_{{.}} value')
+def step_impl(context):
+    msg = Py_{{.}}_initialize_random()
+    result = {{.}}_type_convert_testable(msg)
+    assert not result, result
+
+@given('a {{.}}.publish function exists')
+def step_impl(context):
+    assert callable(publish)
+
+@when('I try to publish something that is not of type Py_{{.}}')
+def step_impl(context):
+    bad_obj = "not the right type of object!"
+    context.exception = None
+
+    try:
+        publish(bad_obj)
+    except Exception as e:
+        context.exception = e
+
+@then('a {exeption} indicates the type was not Py_{{.}}')
+def step_impl(context, exeption):
+    assert isinstance(context.exception, eval(exeption)), \
+    "Invalid exception %s - expected %s" \
+    % (type(context.exception).__name__, exeption)
+
+GLOBAL_TIMESTAMP = None
+GLOBAL_GUID = None
+
+def Py_{{.}}_handler(msg):
+    if msg.header.src_guid == GLOBAL_GUID:
+        global GLOBAL_TIMESTAMP
+        GLOBAL_TIMESTAMP = msg.header.timestamp
+
+@given(u'I have a licensed PsNode for publishing Py_{{.}}')
+def step_impl(context):
+    assert context.node_ref
+    global GLOBAL_GUID
+    GLOBAL_GUID = context.my_guid
+
+@given(u'I have a Py_{{.}}')
+def step_impl(context):
+    context.msg = Py_{{.}}()
+    context.msg.header.timestamp = 0xFFFF
+
+@given(u'I have a handler for Py_{{.}} subscription')
+def step_impl(context):
+    assert Py_{{.}}_handler
+    subscribe(handler=Py_{{.}}_handler)
+
+@when(u'I publish my Py_{{.}}')
+def step_impl(context):
+    publish(context.msg)
+
+@then(u'I receive the corresponding Py_{{.}} in my handler')
+def step_impl(context):
+    global GLOBAL_TIMESTAMP
+    while not GLOBAL_TIMESTAMP:
+        time.sleep(1)
+    assert_that(context.msg.header.timestamp, equal_to(GLOBAL_TIMESTAMP))
+
+{{/message}}

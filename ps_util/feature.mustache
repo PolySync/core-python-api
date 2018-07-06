@@ -1,0 +1,23 @@
+# WARNING: Auto-generated file. Any changes are subject to being overwritten
+# by setup.py build script.
+
+{{#message}}
+Feature: {{.}} support
+	Scenario: Excercise PolySync message conversion between Python API and C API
+		Given I have a Py_{{.}} object
+		When I convert it to its C API equivalent a {{.}}
+		And I convert the {{.}} back to a Py_{{.}}
+		Then the {{.}} values are equivalent to each Py_{{.}} value
+
+	Scenario: Excercise Python API publish type check
+		Given a {{.}}.publish function exists
+		When I try to publish something that is not of type Py_{{.}}
+		Then a TypeError indicates the type was not Py_{{.}}
+
+	Scenario: Excercise Py_{{.}} publish and subscribe
+		Given I have a licensed PsNode for publishing Py_{{.}}
+		And I have a Py_{{.}}
+		And I have a handler for Py_{{.}} subscription
+		When I publish my Py_{{.}}
+		Then I receive the corresponding Py_{{.}} in my handler
+{{/message}}

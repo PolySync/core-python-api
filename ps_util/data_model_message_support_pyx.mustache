@@ -1,0 +1,89 @@
+# WARNING: Auto-generated file. Any changes are subject to being overwritten
+# by setup.py build script.
+
+{{#message}}
+"""file: {{.}}.pyx
+Support for {{.}} type
+IDL definitions visible in /usr/local/polysync/pdm/psync.idl
+WARNING: Auto-generated file. Any changes can be overwritten by setup.py
+build script.
+"""
+cimport polysync
+cimport polysync.message as ps_msg
+cimport polysync.node as ps_node
+import polysync.data_model.types as py_ps_types
+cimport polysync.data_model._internal as c_ps_types
+import types
+import sys
+from posix.unistd cimport usleep
+from cython.parallel import parallel
+
+def subscribe(handler=None):
+    """Subscribe to Py_{{.}} on the PolySync Bus
+    """
+    cdef int ret = 0
+    cdef polysync.ps_msg_type msg_type
+
+    if ps_node.get_node_ref() == NULL:
+        raise ValueError(
+            'Invalid node reference in {{.}} subscribe')
+
+    if not isinstance(handler, types.FunctionType):
+        raise ValueError(
+            "{{.}} subscribe handler isn't a function!")
+
+    ret = polysync.psync_message_get_type_by_name(
+            ps_node.get_node_ref(),
+            b"{{.}}",
+            &msg_type)
+
+    if ret:
+        raise ValueError(
+            'psync_message_get_type_by_name returned %s' % ret)
+
+    ret = polysync.psync_message_register_listener(
+            ps_node.get_node_ref(),
+            msg_type,
+            {{.}}__handler,
+            <void*>handler)
+
+    if ret:
+        raise ValueError(
+            'psync_message_register_listener returned %s' % ret)
+
+def publish(py_msg):
+    """Publish Py_{{.}} on the PolySync Bus
+    """
+    if not isinstance(py_msg, py_ps_types.Py_{{.}}):
+        raise TypeError(
+            'publish called on non-Py_{{.}} object')
+
+    cdef polysync.ps_msg_ref msg_ref = \
+    ps_msg.ps_msg_alloc(b"{{.}}")
+
+    # need to preserve message type after copy
+    type = (<polysync.{{.}}*>msg_ref).header.type
+
+    # translate py_msg to c_msg
+    c_ps_types.{{.}}_py_to_c(py_msg,
+        <polysync.{{.}}*>msg_ref)
+
+    # restore type after copy
+    (<polysync.{{.}}*>msg_ref).header.type = <polysync.ps_msg_type> type
+
+    ps_msg.ps_msg_publish_and_free(msg_ref)
+
+cdef void {{.}}__handler(
+    polysync.ps_msg_type msg_type,
+    polysync.ps_msg_ref message,
+    void * user_data ) with gil:
+    """Callback resistered for {{.}} activity on bus.
+    """
+    cdef object py_handler = <object>user_data
+    py_handler(c_ps_types.{{.}}_c_to_py(
+        <polysync.{{.}}*>message))
+
+    with nogil:
+        usleep(1000)
+
+{{/message}}
