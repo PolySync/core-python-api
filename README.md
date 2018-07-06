@@ -16,7 +16,13 @@ An Experimental PolySync Core Python 3 API.
 
 ### Building
 
-Build with `python3 setup.py build_ext -i`
+After installing each dependency, it's time to build.
+
+To build in-place (recommended), use the following command:
+
+```bash
+python3 setup.py build_ext -i
+```
 
 ### Examples
 
@@ -40,6 +46,8 @@ Run tests with `./test.py`.
 
 ### Generating the system externs (see polysync/__init__.pxd)
 
+To generate the Cython system "externs" navigate to the `util` directory and run `python3 gen_pxd.py`. That will generate a `generated.pxd` that can be copied to `polysync/__init__.pxd`
+
 If you want to explore the system code generation tools you'll need the
 following:
 
@@ -52,8 +60,6 @@ cd python-autopxd
 git checkout b75f871
 pip3 install -e .
 ```
-
-To generate the Cython system "externs" navigate to the `util` directory and run `python3 gen_pxd.py`. That will generate a `generated.pxd` that can be copied to `polysync/__init__.pxd`
 
 # License
 

@@ -4,33 +4,40 @@
 
 -!!-
 
+-""-
+
 ## Getting Started
 
 ### Dependencies
 
-* -??- -!!-
-* -??- -!!-
-* -??- -!!-
-* -??- -!!-
-* -??- -!!-
+-??-
+
+* -??-
+* -""-
 
 ### Building
 
 -!!-<!-- Short Explanation -->
 
+-!!-<!-- Build Step Explanation -->
+
+```-??-
+```
+
 ### Examples
 
--!!-
+-??-
+
+-""-
+
+* -??-
+* -""-
 
 ```-??-
 ```
 
-```-??-
+```-""-
 ```
-
-```-??-
-```
-
 
 ## Tests
 
@@ -40,18 +47,22 @@
 
 -??-
 
-* -??- -!!-
-* -??- -!!-
+-""-
+
+* -??-
+* -""-
 
 ```-??-
 ```
 
--??-
+```-""-
+```
 
 # License
 
 © 2018, PolySync Technologies, Inc.
 
 * -!!- [-!!-](mailto:-!!-@-!!-)
+* -""-
 
 Please see the [LICENSE](./LICENSE) file for more details
