@@ -42,7 +42,7 @@ python3 examples/node_template/node_template.py
 
 ## Tests
 
-Run tests with `./test.py`.
+Run tests with `python3 test.py`.
 
 ### Generating the system externs (see polysync/__init__.pxd)
 
